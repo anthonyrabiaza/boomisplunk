@@ -1,0 +1,84 @@
+<dashboard>
+  <!--anthony.rabiaza@gmail.com-->
+  <label>Boomi Execution Log</label>
+  <fieldset submitButton="false" autoRun="false">
+    <html>
+      <style>
+        div.fieldset.dashboard-form-globalfieldset div.dashboard-element.html.dashboard-element-html {
+          display: inline-block;
+        }
+      </style>
+      <div>
+        <a href="boomi_execution_log" class="btn btn-primary">Refresh</a>
+        <a href="boomi_audit_log" class="btn default">Audit Logs</a>
+      </div>
+    </html>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Executions Number</title>
+      <chart>
+        <search>
+          <query>* sourcetype=BoomiExecutionLog | eval executionTimeTemp=strptime(executionTime,"%Y%m%d %H%M%S.%3N") | timechart count(executionDuration) by executionTimeTemp</query>
+          <earliest>-1h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Executions</title>
+      <table>
+        <search>
+          <query>* sourcetype=BoomiExecutionLog | eval executionTimeTemp=strptime(executionTime,"%Y%m%d %H%M%S.%3N") | eval executionTimeClean=strftime(executionTimeTemp, "%Y-%m-%d %H:%M:%S") | table executionId, status, executionTimeClean, executionType, processName, atomName, inboundErrorDocumentCount , outboundDocumentCount, executionDuration | rename inboundErrorDocumentCount as "In", outboundDocumentCount as "Out", executionDuration as Duration |  sort -executionTimeClean</query>
+          <earliest>-1h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">50</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">cell</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <drilldown>
+          <link target="_blank">search?q=*%20source=$click.value$%20OR%20$click.value$&amp;earliest=0&amp;latest=</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+</dashboard>

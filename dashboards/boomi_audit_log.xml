@@ -1,0 +1,83 @@
+<dashboard>
+  <!--anthony.rabiaza@gmail.com-->
+  <label>Boomi Audit Log</label>
+  <fieldset submitButton="false" autoRun="false">
+    <html>
+      <style>
+        div.fieldset.dashboard-form-globalfieldset div.dashboard-element.html.dashboard-element-html {
+          display: inline-block;
+        }
+      </style>
+      <div>
+        <a href="boomi_audit_log" class="btn btn-primary">Refresh</a>
+        <a href="boomi_execution_log" class="btn default">Execution Logs</a>
+      </div>
+    </html>
+  </fieldset>
+  <row>
+    <panel>
+      <chart>
+        <title>Action</title>
+        <search>
+          <query>* sourcetype=BoomiAuditLog 
+|  stats count by action</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>User</title>
+        <search>
+          <query>* sourcetype=BoomiAuditLog 
+|  eval loweruserId = lower(userId) 
+|  stats count by loweruserId</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.chart">bar</option>
+        <option name="charting.chart.showDataLabels">all</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Type of action</title>
+        <search>
+          <query>* sourcetype=BoomiAuditLog | stats count by type</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.chart">bar</option>
+        <option name="charting.chart.showDataLabels">all</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <search>
+          <query>* sourcetype=BoomiAuditLog 
+|  eval loweruserId = lower(userId) 
+|  eval dateTimeTemp=strptime(date,"%Y%m%d %H%M%S.%3N") | eval executionTimeClean=strftime(dateTimeTemp, "%Y-%m-%d %H:%M:%S")
+|  table executionTimeClean, level, action, modifier, loweruserId, source, type, message</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">50</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>
