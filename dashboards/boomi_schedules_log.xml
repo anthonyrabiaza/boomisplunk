@@ -1,0 +1,83 @@
+<dashboard>
+  <label>Boomi Schedules Log</label>
+  <fieldset submitButton="false" autoRun="false">
+    <html>
+      <style>
+        div.fieldset.dashboard-form-globalfieldset div.dashboard-element.html.dashboard-element-html {
+          display: inline-block;
+        }
+      </style>
+      <div>
+        <a href="boomi_schedules_log" class="btn btn-primary">Refresh</a>
+        <a href="boomi_audit_log" class="btn default">Audit Logs</a>
+        <a href="boomi_execution_log" class="btn default">Execution Logs</a>
+        <a href="boomi_listener_log" class="btn default">Listener Logs</a>
+      </div>
+    </html>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Status</title>
+      <chart>
+        <search>
+          <query>* sourcetype=BoomiSchedulesLog | eval dateTemp=strptime(date,"%Y%m%d %H%M%S.%3N") |  stats count by status</query>
+          <earliest>-1h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Retries</title>
+      <chart>
+        <search>
+          <query>* sourcetype=BoomiSchedulesLog | eval dateTemp=strptime(date,"%Y%m%d %H%M%S.%3N") |  stats count by maxRetry</query>
+          <earliest>-1h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <input type="dropdown" token="atomName">
+        <label>atomName</label>
+        <choice value="*">*</choice>
+        <search>
+          <query>* | dedup atomName | table atomName</query>
+          <earliest>-1h</earliest>
+          <latest>now</latest>
+        </search>
+        <default>*</default>
+        <initialValue>*</initialValue>
+        <fieldForLabel>atomName</fieldForLabel>
+        <fieldForValue>atomName</fieldForValue>
+      </input>
+      <table>
+        <search>
+          <query>* sourcetype=BoomiSchedulesLog atomName=$atomName$
+| eval dateTimeTemp=strptime(date,"%Y%m%d %H%M%S.%3N")
+| eval dateTimeClean=strftime(dateTimeTemp, "%Y-%m-%d %H:%M:%S")
+| table processId, processName, status, years, months, daysOfMonth, daysOfWeek, hours, minutes, maxRetry, dateTimeClean, atomName
+| sort -status, years, processName</query>
+          <earliest>-1h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">100</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">cell</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <drilldown>
+          <link target="_blank">search?q=*%20$click.value$&amp;earliest=0&amp;latest=</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+</dashboard>

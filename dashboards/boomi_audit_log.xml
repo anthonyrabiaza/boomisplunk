@@ -1,5 +1,4 @@
 <dashboard>
-  <!--anthony.rabiaza@gmail.com-->
   <label>Boomi Audit Log</label>
   <fieldset submitButton="false" autoRun="false">
     <html>
@@ -11,6 +10,8 @@
       <div>
         <a href="boomi_audit_log" class="btn btn-primary">Refresh</a>
         <a href="boomi_execution_log" class="btn default">Execution Logs</a>
+        <a href="boomi_listener_log" class="btn default">Listener Logs</a>
+        <a href="boomi_schedules_log" class="btn default">Schedules Logs</a>
       </div>
     </html>
   </fieldset>
@@ -63,9 +64,10 @@
       <table>
         <search>
           <query>* sourcetype=BoomiAuditLog 
-|  eval loweruserId = lower(userId) 
-|  eval dateTimeTemp=strptime(date,"%Y%m%d %H%M%S.%3N") | eval executionTimeClean=strftime(dateTimeTemp, "%Y-%m-%d %H:%M:%S")
-|  table executionTimeClean, level, action, modifier, loweruserId, source, type, message</query>
+| eval loweruserId = lower(userId) 
+| eval dateTimeTemp=strptime(date,"%Y%m%d %H%M%S.%3N") | eval executionTimeClean=strftime(dateTimeTemp, "%Y-%m-%d %H:%M:%S")
+| table executionTimeClean, level, action, modifier, loweruserId, source, type, message
+| sort -executionTimeClean</query>
           <earliest>-24h@h</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>

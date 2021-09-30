@@ -1,5 +1,4 @@
 <dashboard>
-  <!--anthony.rabiaza@gmail.com-->
   <label>Boomi Execution Log</label>
   <fieldset submitButton="false" autoRun="false">
     <html>
@@ -11,6 +10,8 @@
       <div>
         <a href="boomi_execution_log" class="btn btn-primary">Refresh</a>
         <a href="boomi_audit_log" class="btn default">Audit Logs</a>
+        <a href="boomi_listener_log" class="btn default">Listener Logs</a>
+        <a href="boomi_schedules_log" class="btn default">Schedules Logs</a>
       </div>
     </html>
   </fieldset>
@@ -61,9 +62,22 @@
   <row>
     <panel>
       <title>Executions</title>
+      <input type="dropdown" token="atomName">
+        <label>atomName</label>
+        <choice value="*">*</choice>
+        <search>
+          <query>* | dedup atomName | table atomName</query>
+          <earliest>-1h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <default>*</default>
+        <initialValue>*</initialValue>
+        <fieldForLabel>atomName</fieldForLabel>
+        <fieldForValue>atomName</fieldForValue>
+      </input>
       <table>
         <search>
-          <query>* sourcetype=BoomiExecutionLog | eval executionTimeTemp=strptime(executionTime,"%Y%m%d %H%M%S.%3N") | eval executionTimeClean=strftime(executionTimeTemp, "%Y-%m-%d %H:%M:%S") | table executionId, status, executionTimeClean, executionType, processName, atomName, inboundErrorDocumentCount , outboundDocumentCount, executionDuration | rename inboundErrorDocumentCount as "In", outboundDocumentCount as "Out", executionDuration as Duration |  sort -executionTimeClean</query>
+          <query>* sourcetype=BoomiExecutionLog atomName=$atomName$ | eval executionTimeTemp=strptime(executionTime,"%Y%m%d %H%M%S.%3N") | eval executionTimeClean=strftime(executionTimeTemp, "%Y-%m-%d %H:%M:%S") | table executionId, status, executionTimeClean, executionType, processName, atomName, inboundErrorDocumentCount , outboundDocumentCount, executionDuration | rename inboundErrorDocumentCount as "In", outboundDocumentCount as "Out", executionDuration as Duration |  sort -executionTimeClean</query>
           <earliest>-1h@h</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
