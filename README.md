@@ -1,4 +1,4 @@
-# Boomi Splunk Configuration
+# Splunk Configurations for Boomi
 
 These Splunk configurations will allows the collection, parsing and rendering of Boomi Log in Splunk Enterprise.
 
