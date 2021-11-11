@@ -1,4 +1,4 @@
-<dashboard>
+<form>
   <label>Boomi Audit Log</label>
   <fieldset submitButton="false" autoRun="false">
     <html>
@@ -14,6 +14,17 @@
         <a href="boomi_schedules_log" class="btn default">Schedules Logs</a>
       </div>
     </html>
+    <html>
+      <div style="width:20px" class="spacer">
+      </div>
+    </html>
+    <input type="time" token="timepicker">
+      <label>Time picker</label>
+      <default>
+        <earliest>-7d@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
   </fieldset>
   <row>
     <panel>
@@ -22,11 +33,12 @@
         <search>
           <query>* sourcetype=BoomiAuditLog 
 |  stats count by action</query>
-          <earliest>-24h@h</earliest>
-          <latest>now</latest>
+          <earliest>$timepicker.earliest$</earliest>
+          <latest>$timepicker.latest$</latest>
         </search>
         <option name="charting.chart">pie</option>
         <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
       </chart>
     </panel>
     <panel>
@@ -36,12 +48,13 @@
           <query>* sourcetype=BoomiAuditLog 
 |  eval loweruserId = lower(userId) 
 |  stats count by loweruserId</query>
-          <earliest>-24h@h</earliest>
-          <latest>now</latest>
+          <earliest>$timepicker.earliest$</earliest>
+          <latest>$timepicker.latest$</latest>
         </search>
         <option name="charting.chart">bar</option>
         <option name="charting.chart.showDataLabels">all</option>
         <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
       </chart>
     </panel>
     <panel>
@@ -49,8 +62,8 @@
         <title>Type of action</title>
         <search>
           <query>* sourcetype=BoomiAuditLog | stats count by type</query>
-          <earliest>-24h@h</earliest>
-          <latest>now</latest>
+          <earliest>$timepicker.earliest$</earliest>
+          <latest>$timepicker.latest$</latest>
         </search>
         <option name="charting.chart">bar</option>
         <option name="charting.chart.showDataLabels">all</option>
@@ -61,6 +74,7 @@
   </row>
   <row>
     <panel>
+      <title>Audit logs</title>
       <table>
         <search>
           <query>* sourcetype=BoomiAuditLog 
@@ -68,18 +82,19 @@
 | eval dateTimeTemp=strptime(date,"%Y%m%d %H%M%S.%3N") | eval executionTimeClean=strftime(dateTimeTemp, "%Y-%m-%d %H:%M:%S")
 | table executionTimeClean, level, action, modifier, loweruserId, source, type, message
 | sort -executionTimeClean</query>
-          <earliest>-24h@h</earliest>
-          <latest>now</latest>
+          <earliest>$timepicker.earliest$</earliest>
+          <latest>$timepicker.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="count">50</option>
         <option name="dataOverlayMode">none</option>
         <option name="drilldown">none</option>
         <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>
       </table>
     </panel>
   </row>
-</dashboard>
+</form>

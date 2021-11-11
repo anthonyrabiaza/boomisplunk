@@ -1,4 +1,4 @@
-<dashboard>
+<form>
   <label>Boomi Schedules Log</label>
   <fieldset submitButton="false" autoRun="false">
     <html>
@@ -14,6 +14,30 @@
         <a href="boomi_listener_log" class="btn default">Listener Logs</a>
       </div>
     </html>
+    <html>
+      <div style="width:20px" class="spacer">
+      </div>
+    </html>
+    <input type="time" token="timepicker">
+      <label>Time picker</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown" token="atomName">
+      <label>atomName</label>
+      <choice value="*">*</choice>
+      <search>
+        <query>* sourcetype=BoomiSchedulesLog | dedup atomName | table atomName</query>
+        <earliest>-24h</earliest>
+        <latest>now</latest>
+      </search>
+      <default>*</default>
+      <initialValue>*</initialValue>
+      <fieldForLabel>atomName</fieldForLabel>
+      <fieldForValue>atomName</fieldForValue>
+    </input>
   </fieldset>
   <row>
     <panel>
@@ -21,11 +45,12 @@
       <chart>
         <search>
           <query>* sourcetype=BoomiSchedulesLog | eval dateTemp=strptime(date,"%Y%m%d %H%M%S.%3N") |  stats count by status</query>
-          <earliest>-1h</earliest>
-          <latest>now</latest>
+          <earliest>$timepicker.earliest$</earliest>
+          <latest>$timepicker.latest$</latest>
         </search>
         <option name="charting.chart">pie</option>
         <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
       </chart>
     </panel>
     <panel>
@@ -33,29 +58,17 @@
       <chart>
         <search>
           <query>* sourcetype=BoomiSchedulesLog | eval dateTemp=strptime(date,"%Y%m%d %H%M%S.%3N") |  stats count by maxRetry</query>
-          <earliest>-1h</earliest>
-          <latest>now</latest>
+          <earliest>$timepicker.earliest$</earliest>
+          <latest>$timepicker.latest$</latest>
         </search>
         <option name="charting.chart">pie</option>
         <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
       </chart>
     </panel>
   </row>
   <row>
     <panel>
-      <input type="dropdown" token="atomName">
-        <label>atomName</label>
-        <choice value="*">*</choice>
-        <search>
-          <query>* | dedup atomName | table atomName</query>
-          <earliest>-1h</earliest>
-          <latest>now</latest>
-        </search>
-        <default>*</default>
-        <initialValue>*</initialValue>
-        <fieldForLabel>atomName</fieldForLabel>
-        <fieldForValue>atomName</fieldForValue>
-      </input>
       <table>
         <search>
           <query>* sourcetype=BoomiSchedulesLog atomName=$atomName$
@@ -63,8 +76,8 @@
 | eval dateTimeClean=strftime(dateTimeTemp, "%Y-%m-%d %H:%M:%S")
 | table processId, processName, status, years, months, daysOfMonth, daysOfWeek, hours, minutes, maxRetry, dateTimeClean, atomName
 | sort -status, years, processName</query>
-          <earliest>-1h</earliest>
-          <latest>now</latest>
+          <earliest>$timepicker.earliest$</earliest>
+          <latest>$timepicker.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="count">100</option>
@@ -80,4 +93,4 @@
       </table>
     </panel>
   </row>
-</dashboard>
+</form>

@@ -1,4 +1,4 @@
-<dashboard>
+<form>
   <label>Boomi Execution Log</label>
   <fieldset submitButton="false" autoRun="false">
     <html>
@@ -14,15 +14,52 @@
         <a href="boomi_schedules_log" class="btn default">Schedules Logs</a>
       </div>
     </html>
+    <html>
+      <div style="width:20px" class="spacer">
+      </div>
+    </html>
+    <input type="time" token="timepicker">
+      <label>Time picker</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown" token="atomName">
+      <label>Atom Name</label>
+      <choice value="*">*</choice>
+      <search>
+        <query>* sourcetype=BoomiExecutionLog | dedup atomName | table atomName</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <default>*</default>
+      <initialValue>*</initialValue>
+      <fieldForLabel>atomName</fieldForLabel>
+      <fieldForValue>atomName</fieldForValue>
+    </input>
+    <input type="dropdown" token="processName">
+      <label>Process Name</label>
+      <choice value="*">*</choice>
+      <search>
+        <query>* sourcetype=BoomiExecutionLog atomName="$atomName$" | dedup processName | table processName</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <default>*</default>
+      <initialValue>*</initialValue>
+      <fieldForLabel>processName</fieldForLabel>
+      <fieldForValue>processName</fieldForValue>
+    </input>
   </fieldset>
   <row>
     <panel>
       <title>Executions Number</title>
       <chart>
         <search>
-          <query>* sourcetype=BoomiExecutionLog | eval executionTimeTemp=strptime(executionTime,"%Y%m%d %H%M%S.%3N") | timechart count(executionDuration) by executionTimeTemp</query>
-          <earliest>-1h@h</earliest>
-          <latest>now</latest>
+          <query>* sourcetype=BoomiExecutionLog atomName="$atomName$" processName="$processName$" | eval executionTimeTemp=strptime(executionTime,"%Y%m%d %H%M%S.%3N") | eval _time = executionTimeTemp | timechart count by processName</query>
+          <earliest>$timepicker.earliest$</earliest>
+          <latest>$timepicker.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
@@ -46,13 +83,14 @@
         <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
         <option name="charting.chart.stackMode">default</option>
         <option name="charting.chart.style">shiny</option>
-        <option name="charting.drilldown">all</option>
+        <option name="charting.drilldown">none</option>
         <option name="charting.layout.splitSeries">0</option>
         <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
         <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
         <option name="charting.legend.mode">standard</option>
         <option name="charting.legend.placement">right</option>
         <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
         <option name="trellis.enabled">0</option>
         <option name="trellis.scales.shared">1</option>
         <option name="trellis.size">medium</option>
@@ -61,31 +99,43 @@
   </row>
   <row>
     <panel>
-      <title>Executions</title>
-      <input type="dropdown" token="atomName">
-        <label>atomName</label>
-        <choice value="*">*</choice>
-        <search>
-          <query>* | dedup atomName | table atomName</query>
-          <earliest>-1h@h</earliest>
-          <latest>now</latest>
-        </search>
-        <default>*</default>
-        <initialValue>*</initialValue>
-        <fieldForLabel>atomName</fieldForLabel>
-        <fieldForValue>atomName</fieldForValue>
-      </input>
+      <title>Process Execution Times</title>
       <table>
         <search>
-          <query>* sourcetype=BoomiExecutionLog atomName=$atomName$ | eval executionTimeTemp=strptime(executionTime,"%Y%m%d %H%M%S.%3N") | eval executionTimeClean=strftime(executionTimeTemp, "%Y-%m-%d %H:%M:%S") | table executionId, status, executionTimeClean, executionType, processName, atomName, inboundErrorDocumentCount , outboundDocumentCount, executionDuration | rename inboundErrorDocumentCount as "In", outboundDocumentCount as "Out", executionDuration as Duration |  sort -executionTimeClean</query>
-          <earliest>-1h@h</earliest>
-          <latest>now</latest>
+          <query>* sourcetype=BoomiExecutionLog atomName="$atomName$" processName="$processName$" | eval executionDurationTemp = tonumber(executionDuration) | stats count(executionDurationTemp) AS "Number of Executions", max(executionDurationTemp) AS "Max Duration", min(executionDurationTemp) AS "Min Duration", avg(executionDurationTemp) AS "Average Duration" by processName | sort "Max Duration" desc</query>
+          <earliest>$timepicker.earliest$</earliest>
+          <latest>$timepicker.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Process Execution Statuses</title>
+      <table>
+        <search>
+          <query>* sourcetype=BoomiExecutionLog atomName="$atomName$" processName="$processName$" | eval complete=mvfilter(match(status,"COMPLETE")) | eval error=mvfilter(match(status,"ERROR")) | eval inprocess=mvfilter(match(status,"INPROCESS")) | eval started=mvfilter(match(status,"STARTED")) | eval discarded=mvfilter(match(status,"DISCARDED")) | stats count(complete) AS "Complete", count(error) AS "Error", count(inprocess) AS "InProcess", count(started) AS "Started", count(discarded) AS "Discarded" by processName | sort complete desc</query>
+          <earliest>$timepicker.earliest$</earliest>
+          <latest>$timepicker.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Executions</title>
+      <table>
+        <search>
+          <query>* sourcetype=BoomiExecutionLog atomName="$atomName$" processName="$processName$" | eval executionTimeTemp=strptime(executionTime,"%Y%m%d %H%M%S.%3N") | eval executionTimeClean=strftime(executionTimeTemp, "%Y-%m-%d %H:%M:%S") | table executionId, status, executionTimeClean, executionType, processName, atomName, inboundErrorDocumentCount , outboundDocumentCount, executionDuration | rename inboundErrorDocumentCount as "In", outboundDocumentCount as "Out", executionDuration as Duration |  sort -executionTimeClean</query>
+          <earliest>$timepicker.earliest$</earliest>
+          <latest>$timepicker.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="count">50</option>
         <option name="dataOverlayMode">none</option>
         <option name="drilldown">cell</option>
         <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>
@@ -95,4 +145,4 @@
       </table>
     </panel>
   </row>
-</dashboard>
+</form>

@@ -14,51 +14,64 @@
         <a href="boomi_schedules_log" class="btn default">Schedules Logs</a>
       </div>
     </html>
+    <html>
+      <div style="width:20px" class="spacer">
+      </div>
+    </html>
+    <input type="time" token="timepicker">
+      <label>Time picker</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown" token="atomName">
+      <label>atomName</label>
+      <choice value="*">*</choice>
+      <search>
+        <query>* sourcetype=BoomiListenerLog | dedup atomName | table atomName</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <default>*</default>
+      <initialValue>*</initialValue>
+      <fieldForLabel>atomName</fieldForLabel>
+      <fieldForValue>atomName</fieldForValue>
+    </input>
   </fieldset>
   <row>
     <panel>
       <title>Status</title>
       <chart>
         <search>
-          <query>* sourcetype=BoomiListenerLog | eval dateTemp=strptime(date,"%Y%m%d %H%M%S.%3N") |  stats count by status</query>
-          <earliest>-15m</earliest>
-          <latest>now</latest>
+          <query>* sourcetype=BoomiListenerLog atomName="$atomName$" | eval dateTemp=strptime(date,"%Y%m%d %H%M%S.%3N") |  stats count by status</query>
+          <earliest>$timepicker.earliest$</earliest>
+          <latest>$timepicker.latest$</latest>
         </search>
         <option name="charting.chart">pie</option>
         <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
       </chart>
     </panel>
     <panel>
       <title>Type</title>
       <chart>
         <search>
-          <query>* sourcetype=BoomiListenerLog | eval dateTemp=strptime(date,"%Y%m%d %H%M%S.%3N") |  stats count by listenerType</query>
-          <earliest>-15m</earliest>
-          <latest>now</latest>
+          <query>* sourcetype=BoomiListenerLog atomName="$atomName$" | eval dateTemp=strptime(date,"%Y%m%d %H%M%S.%3N") |  stats count by listenerType</query>
+          <earliest>$timepicker.earliest$</earliest>
+          <latest>$timepicker.latest$</latest>
         </search>
         <option name="charting.chart">pie</option>
         <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
       </chart>
     </panel>
   </row>
   <row>
     <panel>
-      <input type="dropdown" token="atomName">
-        <label>atomName</label>
-        <choice value="*">*</choice>
-        <search>
-          <query>* | dedup atomName | table atomName</query>
-          <earliest>-15m</earliest>
-          <latest>now</latest>
-        </search>
-        <default>*</default>
-        <initialValue>*</initialValue>
-        <fieldForLabel>atomName</fieldForLabel>
-        <fieldForValue>atomName</fieldForValue>
-      </input>
       <table>
         <search>
-          <query>* sourcetype=BoomiListenerLog atomName=$atomName$
+          <query>* sourcetype=BoomiListenerLog atomName="$atomName$"
 | eval dateTimeTemp=strptime(date,"%Y%m%d %H%M%S.%3N")
 | eval dateTimeClean=strftime(dateTimeTemp, "%Y-%m-%d %H:%M:%S")
 | table processId, listenerName, listenerType, status, dateTimeClean, atomName
